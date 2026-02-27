@@ -1,9 +1,30 @@
 //! Work state collector - saves and loads work state for context recovery
 
-use crate::context::{TodoItem, WorkState};
+use super::traits::Collector;
+use crate::config::Config;
+use crate::context::{Context, TodoItem, WorkState};
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
+
+/// Work state collector
+#[derive(Debug, Default)]
+pub struct WorkStateCollector;
+
+impl Collector for WorkStateCollector {
+    fn name(&self) -> &'static str {
+        "workstate"
+    }
+
+    fn is_enabled(&self, _config: &Config) -> bool {
+        // Always enabled - core feature for context recovery
+        true
+    }
+
+    fn collect(&self, _config: &Config, ctx: &mut Context) {
+        ctx.work_state = load_work_state_with_hooks();
+    }
+}
 
 /// Get the path to the work state file
 pub fn get_work_state_path() -> String {

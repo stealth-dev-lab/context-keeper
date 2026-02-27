@@ -1,9 +1,33 @@
 //! Git collector - multi-repository status
 
+use super::traits::Collector;
 use crate::config::Config;
-use crate::context::GitInfo;
+use crate::context::{Context, GitInfo};
 use std::fs;
 use std::path::Path;
+
+/// Git repository collector
+#[derive(Debug, Default)]
+pub struct GitCollector;
+
+impl Collector for GitCollector {
+    fn name(&self) -> &'static str {
+        "git"
+    }
+
+    fn is_enabled(&self, config: &Config) -> bool {
+        // Enabled by default, can be disabled via config
+        config
+            .git
+            .as_ref()
+            .and_then(|g| g.auto_detect)
+            .unwrap_or(true)
+    }
+
+    fn collect(&self, config: &Config, ctx: &mut Context) {
+        ctx.git_repos = collect_git_repos(config);
+    }
+}
 
 /// Collect git info from a single repository path
 fn collect_git_info_for_path(repo_path: &str) -> Option<GitInfo> {

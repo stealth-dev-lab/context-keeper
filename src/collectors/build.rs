@@ -1,12 +1,38 @@
 //! BuildScript collector - parses config files to extract build targets
 
+use super::traits::Collector;
 use crate::config::Config;
-use crate::context::BuildTarget;
+use crate::context::{BuildTarget, Context};
 use std::fs;
 use std::path::Path;
 
+/// BuildScript collector
+#[derive(Debug, Default)]
+pub struct BuildCollector;
+
+impl Collector for BuildCollector {
+    fn name(&self) -> &'static str {
+        "build"
+    }
+
+    fn is_enabled(&self, config: &Config) -> bool {
+        config.scripts.is_some()
+    }
+
+    fn collect(&self, config: &Config, ctx: &mut Context) {
+        ctx.targets = collect_build_targets(config);
+
+        // Also parse entry point commands if available
+        if let Some(scripts) = &config.scripts {
+            if let Some(entry) = &scripts.entry_point {
+                ctx.available_commands = parse_entry_point_commands(entry);
+            }
+        }
+    }
+}
+
 /// Collect build targets from config files
-pub fn collect_build_targets(config: &Config) -> Vec<BuildTarget> {
+fn collect_build_targets(config: &Config) -> Vec<BuildTarget> {
     let mut targets = Vec::new();
 
     let scripts_config = match &config.scripts {

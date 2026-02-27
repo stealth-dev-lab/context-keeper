@@ -13,6 +13,7 @@ pub struct Config {
     pub hints: Option<HintsConfig>,
     pub history: Option<HistoryConfig>,
     pub git: Option<GitConfig>,
+    pub adb: Option<AdbConfig>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -57,6 +58,12 @@ pub struct GitConfig {
     pub auto_detect: Option<bool>,
     /// Max depth for auto-detection (default: 2)
     pub scan_depth: Option<usize>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AdbConfig {
+    /// Enable/disable ADB device collection
+    pub enabled: Option<bool>,
 }
 
 /// Read configuration from file

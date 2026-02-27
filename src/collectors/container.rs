@@ -1,10 +1,30 @@
 //! Container collector - detects running Docker/Podman containers
 
+use super::traits::Collector;
 use crate::config::Config;
-use crate::context::ContainerInfo;
+use crate::context::{ContainerInfo, Context};
+
+/// Container collector
+#[derive(Debug, Default)]
+pub struct ContainerCollector;
+
+impl Collector for ContainerCollector {
+    fn name(&self) -> &'static str {
+        "container"
+    }
+
+    fn is_enabled(&self, _config: &Config) -> bool {
+        // Always enabled - containers are a core feature
+        true
+    }
+
+    fn collect(&self, config: &Config, ctx: &mut Context) {
+        ctx.containers = collect_containers(config);
+    }
+}
 
 /// Collect running containers
-pub fn collect_containers(config: &Config) -> Vec<ContainerInfo> {
+fn collect_containers(config: &Config) -> Vec<ContainerInfo> {
     let mut containers = Vec::new();
 
     let runtime = config

@@ -1,14 +1,37 @@
 //! History collector - tracks relevant commands via hook-captured logs
 
+use super::traits::Collector;
 use crate::config::Config;
-use crate::context::HistoryEntry;
+use crate::context::{Context, HistoryEntry};
 use regex::Regex;
 use std::fs;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+/// Command history collector
+#[derive(Debug, Default)]
+pub struct HistoryCollector;
+
+impl Collector for HistoryCollector {
+    fn name(&self) -> &'static str {
+        "history"
+    }
+
+    fn is_enabled(&self, config: &Config) -> bool {
+        config
+            .history
+            .as_ref()
+            .and_then(|h| h.enabled)
+            .unwrap_or(true)
+    }
+
+    fn collect(&self, config: &Config, ctx: &mut Context) {
+        ctx.command_history = collect_command_history(config);
+    }
+}
+
 /// Collect command history from log file
-pub fn collect_command_history(config: &Config) -> Vec<HistoryEntry> {
+fn collect_command_history(config: &Config) -> Vec<HistoryEntry> {
     let history_config = match &config.history {
         Some(hc) if hc.enabled.unwrap_or(true) => hc,
         _ => return Vec::new(),

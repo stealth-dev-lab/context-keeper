@@ -1,9 +1,42 @@
 //! ADB/Fastboot collector - detects connected Android devices
 
-use crate::context::AdbDevice;
+use super::traits::Collector;
+use crate::config::Config;
+use crate::context::{AdbDevice, Context};
+
+/// ADB/Fastboot device collector
+#[derive(Debug, Default)]
+pub struct AdbCollector;
+
+impl Collector for AdbCollector {
+    fn name(&self) -> &'static str {
+        "adb"
+    }
+
+    fn is_enabled(&self, config: &Config) -> bool {
+        // Enabled by default for AOSP projects, can be disabled via config
+        config
+            .adb
+            .as_ref()
+            .and_then(|a| a.enabled)
+            .unwrap_or_else(|| {
+                // Auto-enable for AOSP projects
+                config
+                    .project
+                    .as_ref()
+                    .and_then(|p| p.project_type.as_deref())
+                    .map(|t| t == "aosp")
+                    .unwrap_or(false)
+            })
+    }
+
+    fn collect(&self, _config: &Config, ctx: &mut Context) {
+        ctx.adb_devices = collect_adb_devices();
+    }
+}
 
 /// Collect connected ADB and Fastboot devices
-pub fn collect_adb_devices() -> Vec<AdbDevice> {
+fn collect_adb_devices() -> Vec<AdbDevice> {
     let mut devices = Vec::new();
 
     // Collect ADB devices
